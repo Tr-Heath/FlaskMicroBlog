@@ -9,7 +9,12 @@
 	<body>
 		<div>
 			Microblog: <a href="/index">Home</a>
-			<a href="/login">Login</a>
+			<a href="/login">Login Test</a>
+			| <a href="{{ url_for('user', nickname = g.user.nickname) }}">Your Profile</a>
+			| <a href="{{ url_for('logout') }}"> Logout </a>
+			<!-- {% if g.user.is_authenticated() %} -->
+
+			<!-- {% endif %} -->
 		</div>
 		<hr>
 		{% with messages = get_flashed_messages() %}
