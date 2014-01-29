@@ -48,18 +48,31 @@ def login():
 		session['remember_me'] = form.remember_me.data #flask.session, data is available in future requests from same client
 		#flash used for debugging purposes for now
 		#flash('Login requested for OpenID="' + form.openid.data + '", remember_me=' + str(form.remember_me.data))
-		return oid.try_login(form.openid.data, ask_for = ['nickname', 'email'])
+		return oid.try_login(form.openid.data, ask_for = ['nickname', 'email'], ask_for_optional=[])
 	return render_template('login.html', 
 							title = 'Sign In', 
 							form = form,
 							providers = app.config['OPENID_PROVIDERS'])
+
+@app.route('/user/<nickname>')
+@login_required
+def user(nickname):
+	user = User.query.filter_by(nickname = nickname).first()
+	if user == None:
+		flash('User ' + nickname + ' not found.')
+		return redirect(url_for('index'))
+	posts = [
+		{ 'author': user, 'body': 'Test post #1' },
+		{ 'author': user, 'body': 'Test post #2' }
+	]
+	return render_template('user.html', user = user, posts = posts)
 
 @oid.after_login
 #resp contains info from the OpenID provider
 def after_login(resp):
 	if resp.email is None or resp.email == "":
 		flash('Invalid login. Please try again.')
-        return redirect(url_for('login'))
+		return redirect(url_for('login'))
 	user = User.query.filter_by(email = resp.email).first()
 	if user is None:
 		nickname = resp.nickname
@@ -75,3 +88,7 @@ def after_login(resp):
 	login_user(user, remember = remember_me)
 	return redirect(request.args.get('next') or url_for('index'))
 
+@app.route('/logout')
+def logout():
+	logout_user()
+	return redirect(url_for('index'))
